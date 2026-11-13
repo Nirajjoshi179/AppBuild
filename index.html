@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AppBuild</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      color: #222;
+      margin-bottom: 25px;
+    }
+
+    .apps-container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .app {
+      padding: 20px;
+      margin-bottom: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      background-color: #fff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .app b {
+      font-size: 1.2rem;
+      color: #111;
+      margin-bottom: 15px;
+    }
+
+    .btn-download {
+      width: 100%;
+      max-width: 200px;
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1rem;
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-download:hover {
+      background-color: #218838;
+    }
+
+    #loading {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #666;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Available APK Downloads</h2>
+
+  <div class="apps-container">
+    <div id="loading">Loading Apps... Please wait.</div>
+    <div id="apps"></div>
+  </div>
+<script type="module">
+  import { createClient }
+from 'https://esm.sh/@supabase/supabase-js'
+
+/* SUPABASE CONNECT YAHA */
+
+const supabase =
+createClient(
+'https://wgylobjcxqmjsutgdhdz.supabase.co',
+'sb_publishable_IfpDVaKbbxem461SnCl9UA_LFwdNOon'
+)
+
+// ==========================================
+// LOAD APPS & GEN DIRECT DOWNLOAD
+// ==========================================
+async function loadApps() {
+  const loadingEl = document.getElementById("loading");
+  const appsEl = document.getElementById("apps");
+
+  try {
+    const { data, error } = await supabase
+      .from("apps")
+      .select("name, apk_url");
+
+    if (error) throw error;
+
+    // Loading status hide karein
+    loadingEl.style.display = "none";
+
+    if (!data || data.length === 0) {
+      appsEl.innerHTML = "<div id='loading'>No apps available for download right now.</div>";
+      return;
+    }
+
+    // Direct Browser alert bypass link configuration setup
+    appsEl.innerHTML = data.map(app => {
+      // Content-Disposition link generator for Android downloads
+      const downloadUrl = `${app.apk_url}?download=true`;
+
+      return `
+        <div class="app">
+          <b>${app.name}</b>
+          <!-- target="_self" browser popup tabs blocker settings fix karta hai -->
+          <a href="${downloadUrl}" download="${app.name}.apk" target="_self" class="btn-download">
+            Download App
+          </a>
+        </div>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error(error);
+    loadingEl.style.color = "red";
+    loadingEl.textContent = "Error loading apps: " + error.message;
+  }
+}
+
+// Application load hote hi trigger karein
+loadApps();
+</script>
+
+</body>
+</html>
