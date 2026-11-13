@@ -1,145 +1,507 @@
+
 <!DOCTYPE html>
-<html lang="hi">
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AppBuild</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>AppBuild - Apps</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f5f5f5;
-      color: #333;
-    }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    h2 {
-      text-align: center;
-      color: #222;
-      margin-bottom: 25px;
-    }
-
-    .apps-container {
-      max-width: 500px;
-      margin: 0 auto;
-    }
-
-    .app {
-      padding: 20px;
-      margin-bottom: 15px;
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      background-color: #fff;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .app b {
-      font-size: 1.2rem;
-      color: #111;
-      margin-bottom: 15px;
-    }
-
-    .btn-download {
-      width: 100%;
-      max-width: 200px;
-      padding: 12px 20px;
-      border: 0;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 1rem;
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      transition: background-color 0.2s ease;
-    }
-
-    .btn-download:hover {
-      background-color: #218838;
-    }
-
-    #loading {
-      text-align: center;
-      font-size: 1.1rem;
-      color: #666;
-      margin-top: 50px;
-    }
-  </style>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:#f7f8fc;color:#171923;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+.topbar{
+  background:#fff;padding:15px 18px;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid #eee;
+  position:sticky;top:0;z-index:10;
+}
+.logo{
+  width:43px;height:43px;border-radius:13px;
+  object-fit:cover;background:#eee;
+}
+.brand{font-size:21px;font-weight:800;letter-spacing:-.7px}
+.brand span{color:#3867f5}
+.tagline{font-size:11px;color:#858a99;margin-top:3px}
+.hero{padding:24px 18px 16px}
+.hero h1{font-size:25px;letter-spacing:-.8px}
+.hero p{font-size:13px;color:#777e8e;margin-top:7px}
+.search-row{
+  display:flex;gap:9px;margin-top:19px;
+}
+.search-box{
+  flex:1;display:flex;align-items:center;
+  background:#fff;border:1px solid #e7e9ef;
+  border-radius:13px;padding:0 13px;height:48px;
+}
+.search-box span{font-size:19px;color:#9298a7}
+.search-box input{
+  width:100%;border:0;outline:0;
+  padding:10px;background:transparent;font-size:14px;
+}
+.view-btn{
+  width:48px;height:48px;border:1px solid #e7e9ef;
+  border-radius:13px;background:#fff;
+  font-size:21px;color:#303747;
+}
+.view-btn:active{background:#edf1ff}
+.section{
+  padding:9px 18px 18px;
+}
+.section-head{
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:14px;
+}
+.section-head h2{font-size:17px}
+.count{font-size:12px;color:#858b99}
+.apps{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+}
+.app-card{
+  background:#fff;border:1px solid #eceef3;
+  border-radius:17px;padding:14px;
+  min-width:0;box-shadow:0 3px 12px #17204408;
+}
+.app-icon{
+  width:58px;height:58px;object-fit:cover;
+  border-radius:15px;background:#f0f1f5;
+}
+.app-name{
+  font-size:14px;font-weight:750;
+  margin-top:12px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.app-desc{
+  font-size:11px;color:#858b99;
+  margin-top:5px;line-height:1.5;
+  height:33px;overflow:hidden;
+}
+.rating-small{font-size:11px;color:#e7a500;margin-top:8px}
+.card-actions{display:flex;gap:7px;margin-top:12px}
+.card-actions button{
+  border:0;border-radius:9px;padding:9px 7px;
+  font-size:11px;font-weight:700;flex:1;
+}
+.details-btn{background:#eef2ff;color:#315de0}
+.download-btn{background:#3867f5;color:white}
+.apps.list{grid-template-columns:1fr}
+.apps.list .app-card{
+  display:grid;grid-template-columns:58px 1fr;
+  column-gap:13px;align-items:center;padding:13px;
+}
+.apps.list .app-icon{grid-row:1/4}
+.apps.list .app-name{margin-top:0}
+.apps.list .app-desc{height:auto;max-height:32px}
+.apps.list .rating-small{margin-top:5px}
+.apps.list .card-actions{grid-column:2;margin-top:9px}
+.empty{
+  grid-column:1/-1;text-align:center;
+  padding:45px 15px;color:#888;
+}
+.empty b{display:block;color:#333;margin-bottom:7px}
+footer{text-align:center;color:#999;font-size:11px;padding:25px}
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:#10152680;z-index:30;
+  align-items:flex-end;justify-content:center;
+}
+.overlay.show{display:flex}
+.modal{
+  background:#fff;width:100%;max-width:520px;
+  max-height:88vh;overflow:auto;
+  border-radius:23px 23px 0 0;padding:22px;
+  animation:slide .2s ease;
+}
+@keyframes slide{from{transform:translateY(50px)}to{transform:translateY(0)}}
+.modal-top{display:flex;justify-content:space-between;align-items:center}
+.close{
+  border:0;background:#f0f1f5;width:34px;height:34px;
+  border-radius:50%;font-size:19px;
+}
+.detail-app{display:flex;gap:15px;align-items:center;margin:22px 0}
+.detail-app img{width:75px;height:75px;border-radius:18px;object-fit:cover}
+.detail-app h2{font-size:19px}
+.detail-app p{font-size:12px;color:#888;margin-top:6px}
+.big-download{
+  width:100%;padding:14px;border:0;border-radius:12px;
+  color:#fff;background:#3867f5;font-weight:750;
+}
+.description{font-size:13px;line-height:1.7;color:#656b79;margin:19px 0}
+.rating-box{
+  margin-top:20px;padding:16px;background:#f7f8fc;
+  border-radius:15px;
+}
+.rating-box h3{font-size:15px}
+.average{font-size:27px;font-weight:800;margin-top:9px}
+.stars{display:flex;gap:8px;margin-top:12px}
+.star{
+  font-size:29px;border:0;background:transparent;
+  color:#d5d8df;padding:0;
+}
+.star.active{color:#ffb323}
+.rating-note{font-size:11px;color:#888;margin-top:8px}
+.toast{
+  position:fixed;bottom:25px;left:50%;
+  transform:translateX(-50%);
+  background:#202535;color:white;padding:12px 18px;
+  border-radius:10px;font-size:12px;
+  display:none;z-index:50;
+}
+@media(min-width:650px){
+  .hero,.section{max-width:950px;margin:auto}
+  .topbar{padding-left:max(18px,calc((100% - 950px)/2))}
+  .apps{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .apps.list{grid-template-columns:1fr}
+  .overlay{align-items:center}
+  .modal{border-radius:22px}
+}
+</style>
 </head>
 
 <body>
 
-  <h2>Available APK Downloads</h2>
-
-  <div class="apps-container">
-    <div id="loading">Loading Apps... Please wait.</div>
-    <div id="apps"></div>
+<header class="topbar">
+  <img class="logo" src="app-icon.png" alt="AppBuild"
+       onerror="this.style.display='none'">
+  <div>
+    <div class="brand">App<span>Build</span></div>
+    <div class="tagline">Discover apps. Download easily.</div>
   </div>
-<script type="module">
-  import { createClient }
-from 'https://esm.sh/@supabase/supabase-js'
+</header>
 
-/* SUPABASE CONNECT YAHA */
+<main>
+<section class="hero">
+  <h1>Discover Apps</h1>
+  <p>Find and download your favourite apps.</p>
 
-const supabase =
-createClient(
-'https://wgylobjcxqmjsutgdhdz.supabase.co',
-'sb_publishable_IfpDVaKbbxem461SnCl9UA_LFwdNOon'
-)
+  <div class="search-row">
+    <label class="search-box">
+      <span>⌕</span>
+      <input id="searchInput" type="search"
+             placeholder="Search apps..." autocomplete="off">
+    </label>
+    <button class="view-btn" id="viewBtn"
+            aria-label="Change layout" title="Change layout">▦</button>
+  </div>
+</section>
 
-// ==========================================
-// LOAD APPS & GEN DIRECT DOWNLOAD
-// ==========================================
-async function loadApps() {
-  const loadingEl = document.getElementById("loading");
-  const appsEl = document.getElementById("apps");
+<section class="section">
+  <div class="section-head">
+    <h2>All Applications</h2>
+    <span class="count" id="appCount">Loading...</span>
+  </div>
+  <div class="apps" id="appsContainer">
+    <div class="empty">Loading applications...</div>
+  </div>
+</section>
+</main>
 
-  try {
-    const { data, error } = await supabase
-      .from("apps")
-      .select("name, apk_url");
+<footer>© 2026 AppBuild · All rights reserved</footer>
 
-    if (error) throw error;
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="modal-top">
+      <b>App Details</b>
+      <button class="close" id="closeModal">×</button>
+    </div>
 
-    // Loading status hide karein
-    loadingEl.style.display = "none";
+    <div class="detail-app">
+      <img id="detailImage" src="app-icon.png" alt="App icon">
+      <div>
+        <h2 id="detailName">App name</h2>
+        <p id="detailMeta">AppBuild application</p>
+      </div>
+    </div>
 
-    if (!data || data.length === 0) {
-      appsEl.innerHTML = "<div id='loading'>No apps available for download right now.</div>";
-      return;
-    }
+    <button class="big-download" id="detailDownload">
+      ↓ Download APK
+    </button>
 
-    // Direct Browser alert bypass link configuration setup
-    appsEl.innerHTML = data.map(app => {
-      // Content-Disposition link generator for Android downloads
-      const downloadUrl = `${app.apk_url}?download=true`;
+    <p class="description" id="detailDescription"></p>
 
-      return `
-        <div class="app">
-          <b>${app.name}</b>
-          <!-- target="_self" browser popup tabs blocker settings fix karta hai -->
-          <a href="${downloadUrl}" download="${app.name}.apk" target="_self" class="btn-download">
-            Download App
-          </a>
-        </div>
-      `;
-    }).join("");
+    <div class="rating-box">
+      <h3>Rate this app</h3>
+      <div class="average" id="averageRating">0.0 ★</div>
+      <p class="rating-note" id="ratingCount">No ratings yet</p>
+      <div class="stars" id="starButtons">
+        <button class="star" data-score="1">★</button>
+        <button class="star" data-score="2">★</button>
+        <button class="star" data-score="3">★</button>
+        <button class="star" data-score="4">★</button>
+        <button class="star" data-score="5">★</button>
+      </div>
+      <p class="rating-note" id="ratingMessage">Tap a star to rate.</p>
+    </div>
+  </div>
+</div>
 
-  } catch (error) {
-    console.error(error);
-    loadingEl.style.color = "red";
-    loadingEl.textContent = "Error loading apps: " + error.message;
-  }
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://wgylobjcxqmjsutgdhdz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_IfpDVaKbbxem461SnCl9UA_LFwdNOon";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const appsContainer = document.getElementById("appsContainer");
+const searchInput = document.getElementById("searchInput");
+const viewBtn = document.getElementById("viewBtn");
+
+let allApps = [];
+let visibleApps = [];
+let selectedApp = null;
+let isList = false;
+
+let deviceId = localStorage.getItem("appbuild_device_id");
+if (!deviceId) {
+  deviceId = "device-" + (
+    window.crypto && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Date.now() + "-" + Math.random().toString(36).slice(2)
+  );
+  localStorage.setItem("appbuild_device_id", deviceId);
 }
 
-// Application load hote hi trigger karein
+function toast(message) {
+  const box = document.getElementById("toast");
+  box.textContent = message;
+  box.style.display = "block";
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => box.style.display = "none", 2300);
+}
+
+function safe(value) {
+  return String(value || "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    '"':"&quot;", "'":"&#039;"
+  })[char]);
+}
+
+function appImage(url) {
+  return url || "app-icon.png";
+}
+
+function renderApps() {
+  const query = searchInput.value.trim().toLowerCase();
+
+  visibleApps = allApps.filter(app =>
+    String(app.name || "").toLowerCase().includes(query) ||
+    String(app.description || "").toLowerCase().includes(query)
+  );
+
+  document.getElementById("appCount").textContent =
+    visibleApps.length + " apps";
+
+  appsContainer.className = isList ? "apps list" : "apps";
+  viewBtn.textContent = isList ? "▦" : "☷";
+  viewBtn.title = isList ? "Grid view" : "List view";
+
+  if (!visibleApps.length) {
+    appsContainer.innerHTML = `
+      <div class="empty">
+        <b>No apps found</b>
+        Try another search.
+      </div>`;
+    return;
+  }
+
+  appsContainer.innerHTML = visibleApps.map((app, index) => `
+    <article class="app-card">
+      <img class="app-icon"
+        src="${safe(appImage(app.image_url))}"
+        alt=""
+        onerror="this.src='app-icon.png'">
+
+      <div class="app-name">${safe(app.name)}</div>
+      <div class="app-desc">${safe(app.description || "Download this app.")}</div>
+      <div class="rating-small" id="small-rating-${index}">★ Loading rating</div>
+
+      <div class="card-actions">
+        <button class="details-btn" data-action="details" data-index="${index}">
+          Details
+        </button>
+        <button class="download-btn" data-action="download" data-index="${index}">
+          Download
+        </button>
+      </div>
+    </article>
+  `).join("");
+
+  loadSmallRatings();
+}
+
+async function loadSmallRatings() {
+  const { data, error } = await db
+    .from("app_ratings")
+    .select("app_name,score");
+
+  if (error) return;
+
+  visibleApps.forEach((app, index) => {
+    const ratings = (data || []).filter(r => r.app_name === app.name);
+    const average = ratings.length
+      ? ratings.reduce((sum, r) => sum + Number(r.score), 0) / ratings.length
+      : 0;
+
+    const element = document.getElementById("small-rating-" + index);
+    if (element) {
+      element.textContent = ratings.length
+        ? "★ " + average.toFixed(1) + " (" + ratings.length + ")"
+        : "★ No ratings";
+    }
+  });
+}
+
+async function loadApps() {
+  appsContainer.innerHTML = '<div class="empty">Loading applications...</div>';
+
+  const { data, error } = await db
+    .from("apps")
+    .select("name,description,apk_url,image_url")
+    .order("name");
+
+  if (error) {
+    appsContainer.innerHTML = `
+      <div class="empty">
+        <b>Unable to load apps</b>
+        ${safe(error.message)}
+      </div>`;
+    document.getElementById("appCount").textContent = "Error";
+    return;
+  }
+
+  allApps = data || [];
+  renderApps();
+}
+
+function downloadApp(app) {
+  if (!app || !app.apk_url) {
+    toast("APK download link is not available.");
+    return;
+  }
+  window.open(app.apk_url, "_blank", "noopener");
+}
+
+async function openDetails(app) {
+  selectedApp = app;
+
+  document.getElementById("detailName").textContent = app.name || "App";
+  document.getElementById("detailDescription").textContent =
+    app.description || "No description available.";
+  document.getElementById("detailImage").src = appImage(app.image_url);
+  document.getElementById("detailMeta").textContent = "AppBuild application";
+
+  document.getElementById("detailOverlay").classList.add("show");
+  document.getElementById("ratingMessage").textContent = "Tap a star to rate.";
+
+  await loadRatingDetails(app.name);
+}
+
+async function loadRatingDetails(appName) {
+  const { data, error } = await db
+    .from("app_ratings")
+    .select("score,device_id")
+    .eq("app_name", appName);
+
+  if (error) {
+    toast("Could not load ratings.");
+    return;
+  }
+
+  const ratings = data || [];
+  const average = ratings.length
+    ? ratings.reduce((sum, r) => sum + Number(r.score), 0) / ratings.length
+    : 0;
+
+  document.getElementById("averageRating").textContent =
+    average.toFixed(1) + " ★";
+  document.getElementById("ratingCount").textContent =
+    ratings.length + (ratings.length === 1 ? " rating" : " ratings");
+
+  const ownRating = ratings.find(r => r.device_id === deviceId);
+  updateStars(ownRating ? Number(ownRating.score) : 0);
+
+  document.getElementById("ratingMessage").textContent =
+    ownRating ? "Your rating: " + ownRating.score + " stars" : "Tap a star to rate.";
+}
+
+function updateStars(score) {
+  document.querySelectorAll(".star").forEach(star => {
+    star.classList.toggle("active", Number(star.dataset.score) <= score);
+  });
+}
+
+async function submitRating(score) {
+  if (!selectedApp) return;
+
+  const { error } = await db
+    .from("app_ratings")
+    .upsert({
+      app_name: selectedApp.name,
+      device_id: deviceId,
+      score: score
+    }, {
+      onConflict: "app_name,device_id"
+    });
+
+  if (error) {
+    toast("Rating failed: " + error.message);
+    return;
+  }
+
+  toast("Thanks for rating!");
+  document.getElementById("ratingMessage").textContent =
+    "Your rating: " + score + " stars";
+  await loadRatingDetails(selectedApp.name);
+  await loadSmallRatings();
+}
+
+viewBtn.addEventListener("click", () => {
+  isList = !isList;
+  renderApps();
+});
+
+searchInput.addEventListener("input", renderApps);
+
+appsContainer.addEventListener("click", event => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+
+  const app = visibleApps[Number(button.dataset.index)];
+  if (!app) return;
+
+  if (button.dataset.action === "details") openDetails(app);
+  if (button.dataset.action === "download") downloadApp(app);
+});
+
+document.getElementById("detailDownload").addEventListener("click", () => {
+  downloadApp(selectedApp);
+});
+
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("detailOverlay").classList.remove("show");
+});
+
+document.getElementById("detailOverlay").addEventListener("click", event => {
+  if (event.target.id === "detailOverlay") {
+    event.currentTarget.classList.remove("show");
+  }
+});
+
+document.getElementById("starButtons").addEventListener("click", event => {
+  const star = event.target.closest("button[data-score]");
+  if (star) submitRating(Number(star.dataset.score));
+});
+
 loadApps();
 </script>
-
 </body>
 </html>
